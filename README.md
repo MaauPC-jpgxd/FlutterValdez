@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # casavaldez
 
 A new Flutter project.
@@ -15,3 +16,7 @@ A few resources to get you started if this is your first Flutter project:
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
+=======
+# AppCasaValdezFlutter
+aplicacion en flutter
+>>>>>>> e1c4bdb58a047f67e199b70cb37704ffcb627b80
