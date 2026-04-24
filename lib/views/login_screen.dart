@@ -13,13 +13,47 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final controller = AuthController();
-
+  final _formKey = GlobalKey<FormState>();
   final email = TextEditingController();
   final pass = TextEditingController();
 
   bool loading = false;
+  bool ocultarPassword = true; // 👁
+
+  // 🔥 VALIDACIONES
+  String? validarUsuario(String value) {
+    if (value.isEmpty) return "Este campo es obligatorio";
+
+    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
+    final phoneRegex = RegExp(r'^[0-9]{10,15}$');
+
+    if (!emailRegex.hasMatch(value) && !phoneRegex.hasMatch(value)) {
+      return "Ingresa un correo o teléfono válido";
+    }
+
+    return null;
+  }
+
+  String? validarPassword(String value) {
+    if (value.isEmpty) return "La contraseña es obligatoria";
+
+    if (value.length < 6) return "Mínimo 6 caracteres";
+
+    if (!RegExp(r'[A-Z]').hasMatch(value)) {
+      return "Debe tener una mayúscula";
+    }
+
+    if (!RegExp(r'[0-9]').hasMatch(value)) {
+      return "Debe tener un número";
+    }
+
+    return null;
+  }
 
   void login() async {
+    // 🔥 VALIDACIÓN ANTES DE FIREBASE
+    if (!_formKey.currentState!.validate()) return;
+
     setState(() => loading = true);
 
     final error = await controller.login(
@@ -30,8 +64,12 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => loading = false);
 
     if (error != null) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(error)));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -69,74 +107,110 @@ class _LoginScreenState extends State<LoginScreen> {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(18),
                   ),
-                  child: Column(
-                    children: [
-                      TextField(
-                        controller: email,
-                        decoration: const InputDecoration(
-                          labelText: "Correo o teléfono",
-                          prefixIcon: Icon(Icons.person),
+
+                  // 🔥 FORM
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      children: [
+                        TextFormField(
+                          controller: email,
+                          validator: (value) =>
+                              validarUsuario(value ?? ""),
+                          decoration: InputDecoration(
+                            labelText: "Correo o teléfono",
+                            prefixIcon: const Icon(Icons.person),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 15),
-                      TextField(
-                        controller: pass,
-                        obscureText: true,
-                        decoration: const InputDecoration(
-                          labelText: "Contraseña",
-                          prefixIcon: Icon(Icons.lock),
+
+                        const SizedBox(height: 15),
+
+                        TextFormField(
+                          controller: pass,
+                          obscureText: ocultarPassword,
+                          validator: (value) =>
+                              validarPassword(value ?? ""),
+                          decoration: InputDecoration(
+                            labelText: "Contraseña",
+                            prefixIcon: const Icon(Icons.lock),
+
+                            // 👁 BOTÓN VER CONTRASEÑA
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                ocultarPassword
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  ocultarPassword = !ocultarPassword;
+                                });
+                              },
+                            ),
+
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 25),
 
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: loading ? null : login,
-                          child: loading
-                              ? const CircularProgressIndicator(color: Colors.white)
-                              : const Text("Iniciar sesión"),
+                        const SizedBox(height: 25),
+
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: loading ? null : login,
+                            child: loading
+                                ? const CircularProgressIndicator(
+                                color: Colors.white)
+                                : const Text("Iniciar sesión"),
+                          ),
                         ),
-                      ),
 
-                      const SizedBox(height: 15),
+                        const SizedBox(height: 15),
 
-                      // 👉 REGISTRO
-                      TextButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) => const RegisterScreen()),
-                          );
-                        },
-                        child: const Text("¿No tienes cuenta? Regístrate"),
-                      ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) =>
+                                  const RegisterScreen()),
+                            );
+                          },
+                          child:
+                          const Text("¿No tienes cuenta? Regístrate"),
+                        ),
 
-                      // 👉 CONTINUAR SIN CUENTA
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) => const WebViewScreen()),
-                          );
-                        },
-                        child: const Text("Continuar sin cuenta"),
-                      ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) =>
+                                  const WebViewScreen()),
+                            );
+                          },
+                          child: const Text("Continuar sin cuenta"),
+                        ),
 
-                      // 👉 PRIVACIDAD
-                      TextButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) => const PrivacyScreen()),
-                          );
-                        },
-                        child: const Text("Políticas de privacidad"),
-                      ),
-                    ],
+                        TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) =>
+                                  const PrivacyScreen()),
+                            );
+                          },
+                          child:
+                          const Text("Políticas de privacidad"),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
