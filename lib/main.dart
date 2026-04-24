@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
-
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 void main() {
   runApp(const CasaValdezApp());
 }
@@ -94,23 +95,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 size: 90,
                 color: Color(0xFF1565C0),
               ),
-
               const SizedBox(height: 25),
-
               const Text(
                 "Bienvenido",
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
-
               const SizedBox(height: 10),
-
               const Text(
                 "Ordena fácil y rápido desde tu celular",
                 textAlign: TextAlign.center,
               ),
-
               const SizedBox(height: 40),
-
               AnimatedScale(
                 scale: scale1,
                 duration: const Duration(milliseconds: 120),
@@ -122,9 +117,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: const Text("Comenzar a pedir"),
                 ),
               ),
-
               const SizedBox(height: 15),
-
               AnimatedScale(
                 scale: scale2,
                 duration: const Duration(milliseconds: 120),
@@ -158,34 +151,99 @@ class _WebPageScreenState extends State<WebPageScreen> {
   bool isLoading = true;
   double progress = 0;
 
-  void esperarYAbrirPromociones() async {
-    bool listo = false;
+  // 🔥 FUNCIÓN MANUAL (NO BOT)
+  void abrirPromosManual() async {
+    await controller.runJavaScript("""
+    (function() {
 
-    while (!listo) {
-      await Future.delayed(const Duration(seconds: 3));
+      function realClick(el) {
+        if (!el) return;
 
-      final result = await controller.runJavaScriptReturningResult("""
-        document.querySelector('input[name="cf-turnstile-response"]') === null
-        && document.body.innerText.length > 1000
-      """);
+        el.scrollIntoView({block: 'center'});
 
-      if (result.toString() == "true") {
-        listo = true;
-
-        await Future.delayed(const Duration(seconds: 2));
-
-        await controller.runJavaScript("""
-          const botones = document.querySelectorAll('button');
-          botones.forEach(btn => {
-            if (btn.innerText.toUpperCase().includes('PROMOCIONES')) {
-              btn.click();
-            }
-          });
-        """);
+        ['pointerdown','mousedown','mouseup','click'].forEach(type => {
+          el.dispatchEvent(new MouseEvent(type, {
+            bubbles: true,
+            cancelable: true,
+            view: window
+          }));
+        });
       }
-    }
-  }
 
+      function abrirFiltros() {
+        // Busca botón de filtros (icono)
+        let btns = document.querySelectorAll('button');
+
+        for (let b of btns) {
+          if (b.querySelector('svg')) {
+            realClick(b);
+            return true;
+          }
+        }
+        return false;
+      }
+
+      function clickDepartamentos() {
+        let items = document.querySelectorAll('[role="button"]');
+
+        for (let el of items) {
+          let txt = el.innerText || "";
+          if (txt.toUpperCase().includes("DEPARTAMENTOS")) {
+            realClick(el);
+            return true;
+          }
+        }
+        return false;
+      }
+
+      function clickPromociones() {
+        let items = document.querySelectorAll('.MuiListItemButton-root');
+
+        for (let el of items) {
+          let txt = el.innerText || "";
+          if (txt.toUpperCase().includes("PROMOCIONES")) {
+            realClick(el);
+            return true;
+          }
+        }
+        return false;
+      }
+
+      function clickAceptar() {
+        let btns = document.querySelectorAll('button');
+
+        for (let b of btns) {
+          let txt = b.innerText || "";
+          txt = txt.toUpperCase();
+
+          if (txt.includes("ACEPTAR") || txt.includes("APPLY") || txt.includes("OK")) {
+            realClick(b);
+            return true;
+          }
+        }
+        return false;
+      }
+
+      // 🔁 FLUJO CONTROLADO
+      if (!abrirFiltros()) return;
+
+      setTimeout(() => {
+        if (!clickDepartamentos()) return;
+
+        setTimeout(() => {
+          if (!clickPromociones()) return;
+
+          setTimeout(() => {
+            clickAceptar();
+          }, 900);
+
+        }, 900);
+
+      }, 900);
+
+    })();
+  """);
+  }
   @override
   void initState() {
     super.initState();
@@ -208,12 +266,8 @@ class _WebPageScreenState extends State<WebPageScreen> {
 
             return NavigationDecision.navigate;
           },
-          onPageFinished: (url) async {
+          onPageFinished: (url) {
             setState(() => isLoading = false);
-
-            if (widget.abrirPromos) {
-              esperarYAbrirPromociones();
-            }
           },
         ),
       )
@@ -224,7 +278,16 @@ class _WebPageScreenState extends State<WebPageScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.abrirPromos ? 'Promociones' : 'Sistema'),
+        title: const Text('Sistema'),
+        actions: [
+          TextButton(
+            onPressed: abrirPromosManual, // 👈 SOLO MANUAL
+            child: const Text(
+              "Promociones",
+              style: TextStyle(color: Colors.white),
+            ),
+          )
+        ],
       ),
 
       floatingActionButton: FloatingActionButton(
@@ -248,19 +311,6 @@ class _WebPageScreenState extends State<WebPageScreen> {
 
           if (isLoading)
             const Center(child: CircularProgressIndicator()),
-
-          if (widget.abrirPromos)
-            const Positioned(
-              top: 50,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: Text(
-                  "Resuelve el captcha para ver promociones",
-                  style: TextStyle(fontSize: 12),
-                ),
-              ),
-            ),
         ],
       ),
     );

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "191958052694",
+    "project_id": "casavaldez2-b10ec",
+    "storage_bucket": "casavaldez2-b10ec.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:191958052694:android:ddbdb8fdce7a256ba530f7",
+        "android_client_info": {
+          "package_name": "com.example.casavaldez"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBphrmUYc8SFpDawAxc_i4bOaQw7_1jjFA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
