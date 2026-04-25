@@ -3,14 +3,16 @@
 <plist version="1.0">
 <dict>
 
+	<!-- RENDIMIENTO -->
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 
+	<!-- APP INFO -->
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 
 	<key>CFBundleDisplayName</key>
-	<string>Casavaldez</string>
+	<string>Casa Valdez</string>
 
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
@@ -30,15 +32,13 @@
 	<key>CFBundleShortVersionString</key>
 	<string>$(FLUTTER_BUILD_NAME)</string>
 
-	<key>CFBundleSignature</key>
-	<string>????</string>
-
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 
+	<!-- ESCENAS -->
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
@@ -64,26 +64,41 @@
 		</dict>
 	</dict>
 
+	<!-- PERMITIR WHATSAPP -->
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>whatsapp</string>
 	</array>
 
+	<!-- SEGURIDAD WEBVIEW (RECOMENDADO APP STORE) -->
 	<key>NSAppTransportSecurity</key>
 	<dict>
-		<key>NSAllowsArbitraryLoads</key>
+		<key>NSAllowsArbitraryLoadsInWebContent</key>
 		<true/>
 	</dict>
 
+	<!-- PERMISOS -->
+	<key>NSCameraUsageDescription</key>
+	<string>La app puede usar la cámara para foto de perfil</string>
+
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>La app accede a tus fotos para seleccionar imagen</string>
+
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>La app usa tu ubicación para mejorar la experiencia</string>
+
+	<!-- INPUTS -->
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 
+	<!-- LAUNCH -->
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
 
+	<!-- ORIENTACIÓN -->
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>

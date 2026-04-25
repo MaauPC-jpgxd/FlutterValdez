@@ -42,18 +42,34 @@ class UserController {
       return "Error al actualizar datos";
     }
   }
-
-  Future<String?> deleteAccount() async {
+  Future<String?> deleteAccount(String email, String password) async {
     try {
       if (user == null) return "Sesión inválida";
 
+      // 🔐 REAUTENTICACIÓN OBLIGATORIA
+      final credential = EmailAuthProvider.credential(
+        email: email,
+        password: password,
+      );
+
+      await user!.reauthenticateWithCredential(credential);
+
+      // 🗑️ BORRAR DATOS
       await FirebaseFirestore.instance
           .collection('usuarios')
           .doc(user!.uid)
           .delete();
 
       await user!.delete();
+
       return null;
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'wrong-password') {
+        return "Contraseña incorrecta";
+      } else if (e.code == 'requires-recent-login') {
+        return "Vuelve a iniciar sesión para eliminar la cuenta";
+      }
+      return "Error de autenticación";
     } catch (e) {
       return "No se pudo eliminar la cuenta";
     }
