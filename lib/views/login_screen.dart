@@ -91,7 +91,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 20),
 
                 const Text(
-                  "Casa Valdez",
+                  "Depósito Valdez",
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 26,

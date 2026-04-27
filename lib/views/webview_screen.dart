@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../controllers/auth_controller.dart';
 import '../widgets/app_drawer.dart';
 
 class WebViewScreen extends StatefulWidget {
@@ -13,18 +13,40 @@ class WebViewScreen extends StatefulWidget {
 }
 
 class _WebViewScreenState extends State<WebViewScreen> {
-  final auth = AuthController();
   late final WebViewController controller;
 
   bool isLoading = true;
   double progress = 0;
+  bool hasError = false;
+
+  final String url = "https://casavaldez.sicarx.shop/";
 
   @override
   void initState() {
     super.initState();
 
-    controller = WebViewController()
+    controller = WebViewController();
+
+    if (controller.platform is AndroidWebViewController) {
+      AndroidWebViewController.enableDebugging(true);
+    }
+
+    _initWebView();
+  }
+
+  Future<void> _initWebView() async {
+    await controller.clearCache();
+    await controller.clearLocalStorage();
+
+    controller
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
+
+    // 🔥 USER AGENT REAL (ANTI BLOQUEO)
+      ..setUserAgent(
+        "Mozilla/5.0 (Linux; Android 13; Pixel 7) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/120.0.0.0 Mobile Safari/537.36",
+      )
 
       ..setNavigationDelegate(
         NavigationDelegate(
@@ -32,65 +54,142 @@ class _WebViewScreenState extends State<WebViewScreen> {
             setState(() => progress = p / 100);
           },
 
+          onPageStarted: (_) {
+            setState(() {
+              isLoading = true;
+              hasError = false;
+            });
+          },
+
+          // ✅ CUANDO TERMINA → SIEMPRE QUITAR ERROR
+          onPageFinished: (_) async {
+            setState(() {
+              isLoading = false;
+              hasError = false;
+            });
+
+            // 🔥 DETECTAR BLOQUEO CLOUDFLARE
+            try {
+              final html = await controller.runJavaScriptReturningResult(
+                "document.documentElement.innerText",
+              );
+
+              if (html.toString().toLowerCase().contains("blocked")) {
+                _handleBlock();
+              }
+            } catch (_) {}
+          },
+
+          // ✅ SOLO ERROR REAL (NO FALSOS)
+          onWebResourceError: (error) {
+            if (error.isForMainFrame == true)  {
+              setState(() {
+                hasError = true;
+                isLoading = false;
+              });
+            }
+          },
+
+          // 🔗 LINKS EXTERNOS
           onNavigationRequest: (request) async {
             final url = request.url;
 
-            // 👉 Abrir WhatsApp fuera de la app
             if (url.contains("wa.me") || url.contains("whatsapp")) {
-              final uri = Uri.parse(url);
-              await launchUrl(uri, mode: LaunchMode.externalApplication);
+              await launchUrl(
+                Uri.parse(url),
+                mode: LaunchMode.externalApplication,
+              );
               return NavigationDecision.prevent;
             }
 
             return NavigationDecision.navigate;
           },
-
-          onPageFinished: (url) {
-            setState(() => isLoading = false);
-          },
         ),
       )
 
-    // 👉 Fuerza versión móvil (IMPORTANTE)
-      ..setUserAgent(
-          "Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 Chrome/120 Safari/537.36"
-      )
+      ..loadRequest(Uri.parse(url));
+  }
 
-      ..loadRequest(
-        Uri.parse("https://casavaldez.sicarx.shop/"),
-      );
+  // 🔥 SI CLOUDFLARE BLOQUEA → ABRIR NAVEGADOR
+  void _handleBlock() async {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Protección detectada, abriendo navegador..."),
+      ),
+    );
+
+    await launchUrl(
+      Uri.parse(url),
+      mode: LaunchMode.externalApplication,
+    );
+  }
+
+  // 🔄 REINTENTO
+  void _reload() {
+    setState(() {
+      isLoading = true;
+      hasError = false;
+    });
+
+    controller.loadRequest(Uri.parse(url));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // 🔥 MENÚ LATERAL
       drawer: const AppDrawer(),
 
       appBar: AppBar(
-        title: const Text("Casa Valdez"),
+        title: const Text("Depósito Valdez"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _reload,
+          )
+        ],
       ),
 
       body: Stack(
         children: [
+          // 🔥 SIEMPRE MOSTRAR WEBVIEW (CLAVE)
           WebViewWidget(controller: controller),
 
-          // 🔄 Barra de carga
+          // 🔄 PROGRESS BAR
           if (progress < 1)
             LinearProgressIndicator(
               value: progress,
               color: const Color(0xFF1565C0),
             ),
 
-          // ⏳ Loader
+          // ⏳ LOADING
           if (isLoading)
-            const Center(
-              child: CircularProgressIndicator(),
+            const Center(child: CircularProgressIndicator()),
+
+          // ❌ ERROR SOLO ENCIMA (NO REEMPLAZA)
+          if (hasError)
+            Container(
+              color: Colors.white,
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.wifi_off,
+                        size: 60, color: Colors.grey),
+                    const SizedBox(height: 10),
+                    const Text("Error de conexión"),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: _reload,
+                      child: const Text("Reintentar"),
+                    )
+                  ],
+                ),
+              ),
             ),
         ],
       ),
 
-      // 💬 BOTÓN WHATSAPP
+      // 💬 WHATSAPP
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.green,
         onPressed: () async {
