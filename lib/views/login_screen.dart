@@ -107,7 +107,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     Container(
                       width: 80,
                       height: 80,
-                      padding: const EdgeInsets.all(12),
+                      // Sin padding para que la imagen llene todo
+                      clipBehavior: Clip.hardEdge,
                       decoration: BoxDecoration(
                         color: _surface,
                         borderRadius: BorderRadius.circular(22),
@@ -123,6 +124,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Image.asset(
                         "assets/images/login.png",
                         fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: double.infinity,
                       ),
                     ),
                     const SizedBox(height: 20),
