@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
+import 'verify_email_screen.dart';
+import '../controllers/auth_controller.dart';
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -11,7 +12,7 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
-
+  final controller = AuthController();
   final nombreController     = TextEditingController();
   final telefonoController   = TextEditingController();
   final negocioController    = TextEditingController();
@@ -73,50 +74,39 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     setState(() => loading = true);
 
-    try {
-      UserCredential user = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(
-        email: emailController.text.trim(),
-        password: passController.text.trim(),
-      );
-
-      await FirebaseFirestore.instance
-          .collection('usuarios')
-          .doc(user.user!.uid)
-          .set({
-        "nombre":           nombreController.text.trim(),
-        "telefono":         telefonoController.text.trim(),
-        "negocio":          negocioController.text.trim(),
+    final error = await controller.register(
+      email: emailController.text.trim(),
+      password: passController.text.trim(),
+      data: {
+        "nombre": nombreController.text.trim(),
+        "telefono": telefonoController.text.trim(),
+        "negocio": negocioController.text.trim(),
         "telefono_negocio": telNegocioController.text.trim(),
-        "ubicacion":        ubicacionController.text.trim(),
-        "email":            emailController.text.trim(),
-        "created_at":       FieldValue.serverTimestamp(),
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text("Cuenta creada correctamente 🚀"),
-          backgroundColor: const Color(0xFF16A34A),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
-
-      Navigator.pop(context);
-    } on FirebaseAuthException catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(mapError(e)),
-          backgroundColor: _errorColor,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
-    }
+        "ubicacion": ubicacionController.text.trim(),
+        "email": emailController.text.trim(),
+      },
+    );
 
     setState(() => loading = false);
-  }
 
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error)),
+      );
+      return;
+    }
+
+    // 🔐 cerrar sesión
+    await controller.logout();
+
+    // 🚀 ir a verificación
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const VerifyEmailScreen(),
+      ),
+    );
+  }
   // ── Helper decoración de inputs ────────────────────────────────────────────
   InputDecoration _inputDecoration({
     required String hint,

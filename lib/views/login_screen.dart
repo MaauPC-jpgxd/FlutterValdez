@@ -51,7 +51,6 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void login() async {
-    // 🔥 VALIDACIÓN ANTES DE FIREBASE
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => loading = true);
@@ -65,16 +64,15 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(error),
-          backgroundColor: const Color(0xFFE53935),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
+        SnackBar(content: Text(error)),
       );
+      return;
     }
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const WebViewScreen()),
+    );
   }
 
   // ── Colores centralizados (Nu-style azul) ──────────────────────────────────
@@ -160,7 +158,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Campo: correo / teléfono
-                    _FieldLabel(text: "Ingresa tu correo"),
+                    _FieldLabel(text: "Ingresa Correo "),
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: email,
