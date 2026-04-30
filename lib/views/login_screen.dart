@@ -158,7 +158,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Campo: correo / teléfono
-                    _FieldLabel(text: "Ingresa Correo "),
+                    _FieldLabel(text: "Ingresa tu Correo "),
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: email,
